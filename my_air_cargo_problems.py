@@ -48,12 +48,6 @@ class AirCargoProblem(Problem):
             list of Action objects
         """
 
-        # TODO create concrete Action objects based on the domain action schema for: Load, Unload, and Fly
-        # concrete actions definition: specific literal action that does not include variables as with the schema
-        # for example, the action schema 'Load(c, p, a)' can represent the concrete actions 'Load(C1, P1, SFO)'
-        # or 'Load(C2, P2, JFK)'.  The actions for the planning problem must be concrete because the problems in
-        # forward search and Planning Graphs must use Propositional Logic
-
         def load_actions():
             """Create all concrete Load actions and return a list
 
@@ -64,8 +58,9 @@ class AirCargoProblem(Problem):
             for airport in self.airports:
                 for plane in self.planes:
                     for cargo in self.cargos:
-                        precond_pos = [expr("At({}, {})".format(plane, airport)),
-                                       expr("At({}, {})".format(cargo, airport))]
+                        precond_pos = [expr("At({}, {})".format(cargo, airport)),
+                                       expr("At({}, {})".format(plane, airport)),
+                                       ]
                         precond_neg = []
                         effect_add = [expr("In({}, {})".format(cargo, plane))]
                         effect_rem = [expr("At({}, {})".format(cargo, airport))]
@@ -73,7 +68,7 @@ class AirCargoProblem(Problem):
                         load = Action(expr("Load({}, {}, {})".format(cargo, plane, airport)),
                                       [precond_pos, precond_neg],
                                       [effect_add, effect_rem])
-                    loads.append(load)
+                        loads.append(load)
             return loads
 
         def unload_actions():
@@ -87,7 +82,8 @@ class AirCargoProblem(Problem):
                 for plane in self.planes:
                     for cargo in self.cargos:
                         precond_pos = [expr("At({}, {})".format(plane, airport)),
-                                       expr("In({}, {})".format(cargo, plane))]
+                                       expr("In({}, {})".format(cargo, plane)),
+                                       ]
                         precond_neg = []
                         effect_add = [expr("At({}, {})".format(cargo, airport))]
                         effect_rem = [expr("In({}, {})".format(cargo, plane))]
@@ -104,6 +100,7 @@ class AirCargoProblem(Problem):
             :return: list of Action objects
             """
             flys = []
+
             for fr in self.airports:
                 for to in self.airports:
                     if fr != to:
@@ -133,14 +130,8 @@ class AirCargoProblem(Problem):
 
         kb = PropKB()
         kb.tell(decode_state(state, self.state_map).pos_sentence())
-        state = kb.clauses
-        jo = self.get_actions()
-        h = decode_state(state, self.state_map)
-
-        g = encode_state(h, state)
-
         for action in self.get_actions():
-            if set(action.precond_pos).issubset(set(state)):
+            if action.check_precond(kb, action.args):
                 possible_actions.append(action)
 
         return possible_actions
@@ -154,8 +145,11 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
-        # TODO implement
-        new_state = FluentState([], [])
+        kb = PropKB()
+        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        action.act(kb, action.args)
+
+        new_state = FluentState(kb.clauses, action.effect_rem)
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
@@ -195,7 +189,13 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-        # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
+
+        h = node.state
+        jo = self.goal
+        jodel = encode_state(FluentState(self.goal, []), self.state_map)
+
+
+
         count = 0
         return count
 
