@@ -189,14 +189,14 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-
-        h = node.state
-        jo = self.goal
-        jodel = encode_state(FluentState(self.goal, []), self.state_map)
-
-
-
         count = 0
+
+        goal = self.goal.copy()
+        for action in self.get_actions():
+            if set(action.effect_add) <= set(goal):
+                count += 1
+                goal = list(set(goal) - set(action.effect_add))
+
         return count
 
 
