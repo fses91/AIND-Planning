@@ -303,13 +303,6 @@ class PlanningGraph():
         :return:
             adds A nodes to the current level in self.a_levels[level]
         """
-        # TODO add action A level to the planning graph as described in the Russell-Norvig text
-        # 1. determine what actions to add and create those PgNode_a objects
-        # 2. connect the nodes to the previous S literal level
-        # for example, the A0 level will iterate through all possible actions for the problem and add a PgNode_a to a_levels[0]
-        #   set iff all prerequisite literals for the action hold in S0.  This can be accomplished by testing
-        #   to see if a proposed PgNode_a has prenodes that are a subset of the previous S level.  Once an
-        #   action node is added, it MUST be connected to the S node instances in the appropriate s_level set.
         self.a_levels.append(set())
         for action in self.all_actions:
             pg_a = PgNode_a(action)
@@ -343,14 +336,6 @@ class PlanningGraph():
         :return:
             adds S nodes to the current level in self.s_levels[level]
         """
-        # TODO add literal S level to the planning graph as described in the Russell-Norvig text
-        # 1. determine what literals to add
-        # 2. connect the nodes
-        # for example, every A node in the previous level has a list of S nodes in effnodes that represent the effect
-        #   produced by the action.  These literals will all be part of the new S level.  Since we are working with sets, they
-        #   may be "added" to the set without fear of duplication.  However, it is important to then correctly create and connect
-        #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
-        #   parent sets of the S nodes
         self.s_levels.append(set())
         for node in self.a_levels[level - 1]:
 
@@ -422,7 +407,18 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-        # TODO test for Inconsistent Effects between nodes
+        a1_add = set(node_a1.action.effect_add)
+        a1_rem = set(node_a1.action.effect_rem)
+        a2_add = set(node_a2.action.effect_add)
+        a2_rem = set(node_a2.action.effect_rem)
+
+        if len(a1_add) and len(a2_rem):
+            if a1_add.issubset(a2_rem) or a2_rem.issubset(a1_add):
+                return True
+        if len(a2_add) and len(a1_rem):
+            if a2_add.issubset(a1_rem) or a1_rem.issubset(a2_add):
+                return True
+
         return False
 
     def interference_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
@@ -439,7 +435,28 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-        # TODO test for Interference between nodes
+        a1_add = set(node_a1.action.effect_add)
+        a1_rem = set(node_a1.action.effect_rem)
+        a1_precond_pos = set(node_a1.action.precond_pos)
+        a1_precond_neg = set(node_a1.action.precond_neg)
+        a2_add = set(node_a2.action.effect_add)
+        a2_rem = set(node_a2.action.effect_rem)
+        a2_precond_pos = set(node_a2.action.precond_pos)
+        a2_precond_neg = set(node_a2.action.precond_neg)
+
+        if len(a1_add) and len(a2_precond_neg):
+            if a1_add.issubset(a2_precond_neg) or a2_precond_neg.issubset(a1_add):
+                return True
+        if len(a1_rem) and len(a2_precond_pos):
+            if a1_rem.issubset(a2_precond_pos) or a2_precond_pos.issubset(a1_rem):
+                return True
+        if len(a2_add) and len(a1_precond_neg):
+            if a2_add.issubset(a1_precond_neg) or a1_precond_neg.issubset(a2_add):
+                return True
+        if len(a2_rem) and len(a1_precond_pos):
+            if a2_rem.issubset(a1_precond_pos) or a1_precond_pos.issubset(a2_rem):
+                return True
+
         return False
 
     def competing_needs_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
@@ -452,8 +469,19 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-
         # TODO test for Competing Needs between nodes
+        a1_precond_pos = set(node_a1.action.precond_pos)
+        a1_precond_neg = set(node_a1.action.precond_neg)
+        a2_precond_pos = set(node_a2.action.precond_pos)
+        a2_precond_neg = set(node_a2.action.precond_neg)
+
+        if len(a1_precond_pos) and len(a2_precond_neg):
+            if a1_precond_pos.issubset(a2_precond_neg) or a2_precond_neg.issubset(a1_precond_pos):
+                return True
+        if len(a1_precond_neg) and len(a2_precond_pos):
+            if a1_precond_neg.issubset(a2_precond_pos) or a2_precond_pos.issubset(a1_precond_neg):
+                return True
+
         return False
 
     def update_s_mutex(self, nodeset: set):
