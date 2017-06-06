@@ -469,18 +469,10 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-        # TODO test for Competing Needs between nodes
-        a1_precond_pos = set(node_a1.action.precond_pos)
-        a1_precond_neg = set(node_a1.action.precond_neg)
-        a2_precond_pos = set(node_a2.action.precond_pos)
-        a2_precond_neg = set(node_a2.action.precond_neg)
-
-        if len(a1_precond_pos) and len(a2_precond_neg):
-            if a1_precond_pos.issubset(a2_precond_neg) or a2_precond_neg.issubset(a1_precond_pos):
-                return True
-        if len(a1_precond_neg) and len(a2_precond_pos):
-            if a1_precond_neg.issubset(a2_precond_pos) or a2_precond_pos.issubset(a1_precond_neg):
-                return True
+        for parent1 in node_a1.parents:
+            for parent2 in node_a2.parents:
+                if parent1.is_mutex(parent2):
+                    return True
 
         return False
 
@@ -516,7 +508,11 @@ class PlanningGraph():
         :param node_s2: PgNode_s
         :return: bool
         """
-        # TODO test for negation between nodes
+        if (node_s1.is_pos and not node_s2.is_pos) or \
+                (not node_s1.is_pos and node_s2.is_pos):
+            if node_s1.symbol == node_s2.symbol:
+                return True
+
         return False
 
     def inconsistent_support_mutex(self, node_s1: PgNode_s, node_s2: PgNode_s):
@@ -536,6 +532,13 @@ class PlanningGraph():
         :return: bool
         """
         # TODO test for Inconsistent Support between nodes
+
+
+
+
+
+
+
         return False
 
     def h_levelsum(self) -> int:
