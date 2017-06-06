@@ -533,7 +533,7 @@ class PlanningGraph():
         """
         # TODO test for Inconsistent Support between nodes
 
-
+        for action in self.all_actions:
 
 
 
