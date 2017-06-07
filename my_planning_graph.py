@@ -533,11 +533,13 @@ class PlanningGraph():
         """
         # TODO test for Inconsistent Support between nodes
 
-        for action in self.all_actions:
+        if node_s1.is_mutex(node_s2):
+            return True
 
-
-
-
+        for parent1 in node_s1.parents:
+            for parent2 in node_s2.parents:
+                if parent1.is_mutex(parent2):
+                    return True
 
         return False
 
