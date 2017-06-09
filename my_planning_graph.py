@@ -386,7 +386,6 @@ class PlanningGraph():
         :param node_a2: PgNode_a
         :return: bool
         """
-        #
         if not self.serial:
             return False
         if node_a1.is_persistent or node_a2.is_persistent:
@@ -531,15 +530,14 @@ class PlanningGraph():
         :param node_s2: PgNode_s
         :return: bool
         """
-        # TODO test for Inconsistent Support between nodes
+        state = True
+        for parent1 in node_s1.parents:
+            for parent2 in node_s2.parents:
+                if not parent1.is_mutex(parent2):
+                    state = False
+                    break
 
-        for action in self.all_actions:
-
-
-
-
-
-        return False
+        return state
 
     def h_levelsum(self) -> int:
         """The sum of the level costs of the individual goals (admissible if goals independent)
@@ -547,6 +545,10 @@ class PlanningGraph():
         :return: int
         """
         level_sum = 0
-        # TODO implement
-        # for each goal in the problem, determine the level cost, then add them together
+        level_cost = 0
+        for level in self.s_levels:
+            if set(self.problem.goal).issubset(set([s.symbol for s in level if s.is_pos])):
+                level_sum = level_cost
+                break
+            level_cost += 1
         return level_sum
