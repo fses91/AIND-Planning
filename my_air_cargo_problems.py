@@ -190,13 +190,11 @@ class AirCargoProblem(Problem):
         executed.
         """
         count = 0
-
-        goal = self.goal.copy()
-        for action in self.get_actions():
-            if set(action.effect_add) <= set(goal):
+        kb = PropKB()
+        kb.tell(decode_state(node.state, self.state_map).pos_sentence())
+        for clause in self.goal:
+            if clause not in kb.clauses:
                 count += 1
-                goal = list(set(goal) - set(action.effect_add))
-
         return count
 
 
